@@ -7,8 +7,13 @@
   --muted: rgba(255,255,255,0.65);
   --brand: #3b82f6;
   --brand2: #22c55e;
+  --danger: #ef4444;
+
   --shadow: 0 18px 60px rgba(0,0,0,0.42);
   --shadow2: 0 14px 40px rgba(0,0,0,0.30);
+
+  --radius: 18px;
+  --radius2: 14px;
 }
 
 html, body { height: 100%; }
@@ -29,7 +34,67 @@ body{
   padding: 14px;
 }
 
-/* HERO (topo grande e central) */
+/* ===== Toasts ===== */
+.toasts{
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+  max-width: min(92vw, 380px);
+}
+
+.toast{
+  pointer-events: none;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(10, 14, 25, 0.92);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.45);
+  padding: 12px 12px;
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: toastIn 180ms ease-out forwards;
+}
+
+.toastIcon{
+  width: 28px; height: 28px;
+  border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(59,130,246,0.18);
+  border: 1px solid rgba(59,130,246,0.25);
+  font-weight: 900;
+}
+
+.toastText{
+  display:flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toastTitle{ font-weight: 900; }
+.toastDesc{ color: var(--muted); font-size: 12px; }
+
+.toast.success .toastIcon{
+  background: rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.25);
+}
+.toast.danger .toastIcon{
+  background: rgba(239,68,68,0.18);
+  border-color: rgba(239,68,68,0.25);
+}
+
+@keyframes toastIn{
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut{
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* ===== HERO ===== */
 .hero{
   border-radius: 22px;
   border: 1px solid rgba(255,255,255,0.14);
@@ -43,7 +108,7 @@ body{
   backdrop-filter: blur(10px);
 }
 
-.heroInner{ display:flex; flex-direction:column; gap: 6px; align-items:center; }
+.heroInner{ display:flex; flex-direction:column; gap: 8px; align-items:center; }
 
 .heroLine{
   display:flex;
@@ -58,17 +123,24 @@ body{
   color: var(--muted);
 }
 
-/* Nome do app com choque */
+.heroBadges{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content:center;
+}
+
+/* Nome do app (premium) */
 .shock{
   position: relative;
   font-weight: 900;
-  letter-spacing: 1.2px;
-  font-size: 28px;
-  background: linear-gradient(135deg, #93c5fd, #22c55e);
+  letter-spacing: 1.3px;
+  font-size: 30px;
+  background: linear-gradient(135deg, #bfdbfe, #22c55e);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 22px rgba(59,130,246,0.22);
+  text-shadow: 0 0 22px rgba(59,130,246,0.20);
 }
 
 .shock::before,
@@ -82,15 +154,15 @@ body{
 }
 
 .shock::before{
-  text-shadow: -1px 0 rgba(34,197,94,0.55), 1px 0 rgba(59,130,246,0.55);
-  animation: glitch1 1.6s infinite;
-  opacity: 0.95;
+  text-shadow: -1px 0 rgba(34,197,94,0.45), 1px 0 rgba(59,130,246,0.45);
+  animation: glitch1 1.8s infinite;
+  opacity: 0.85;
 }
 
 .shock::after{
-  text-shadow: -2px 0 rgba(59,130,246,0.50), 2px 0 rgba(34,197,94,0.50);
-  animation: glitch2 2.1s infinite;
-  opacity: 0.75;
+  text-shadow: -2px 0 rgba(59,130,246,0.42), 2px 0 rgba(34,197,94,0.42);
+  animation: glitch2 2.4s infinite;
+  opacity: 0.60;
 }
 
 @keyframes glitch1{
@@ -111,7 +183,7 @@ body{
 
 .spark{
   filter: drop-shadow(0 10px 22px rgba(59,130,246,0.35));
-  animation: sparkFloat 1.5s ease-in-out infinite;
+  animation: sparkFloat 1.6s ease-in-out infinite;
 }
 
 @keyframes sparkFloat{
@@ -119,16 +191,35 @@ body{
   50%{ transform: translateY(-4px) rotate(8deg); }
 }
 
-/* Conteúdo */
+/* Pills */
+.pill{
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(59,130,246,0.16);
+  border: 1px solid rgba(59,130,246,0.25);
+}
+.pill2{
+  background: rgba(34,197,94,0.16);
+  border-color: rgba(34,197,94,0.25);
+}
+.pillGhost{
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.80);
+}
+
+/* ===== Content ===== */
 .content{
   margin-top: 14px;
   display: grid;
   gap: 14px;
 }
 
-/* Cards */
+/* ===== Cards ===== */
 .card{
-  border-radius: 18px;
+  border-radius: var(--radius);
   border: 1px solid var(--stroke);
   background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.03));
   box-shadow: var(--shadow2);
@@ -162,7 +253,7 @@ h2{ margin: 0; font-size: 16px; }
   border: 1px solid var(--stroke);
 }
 
-/* Inputs */
+/* ===== Inputs ===== */
 .grid{
   display:grid;
   grid-template-columns: 1fr;
@@ -178,7 +269,7 @@ h2{ margin: 0; font-size: 16px; }
 input, select{
   width:100%;
   padding: 12px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius2);
   border: 1px solid var(--stroke);
   background: rgba(0,0,0,0.26);
   color: var(--text);
@@ -192,7 +283,12 @@ input:focus, select:focus{
   box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
 }
 
-/* Busca */
+input:disabled{
+  opacity: 0.80;
+  cursor: not-allowed;
+}
+
+/* ===== Busca ===== */
 .searchRow{
   display:grid;
   grid-template-columns: 1fr;
@@ -239,7 +335,32 @@ input:focus, select:focus{
 .sugItem:hover{ background: rgba(59,130,246,0.12); }
 .sugTag{ font-size: 12px; font-weight: 900; color: rgba(59,130,246,0.95); }
 
-/* Form area */
+/* ===== Chips ===== */
+.chips{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip{
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(59,130,246,0.25);
+  background: rgba(59,130,246,0.14);
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+  cursor: pointer;
+}
+.chip:hover{ filter: brightness(1.05); }
+.chip:active{ transform: translateY(1px); }
+
+.chipGhost{
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+}
+
+/* ===== Form area ===== */
 .formArea{
   margin-top: 12px;
   padding: 12px;
@@ -254,7 +375,6 @@ input:focus, select:focus{
   line-height: 1.4;
 }
 
-/* Os campos dinâmicos do script usam .formGrid */
 .formGrid{
   display:grid;
   grid-template-columns: 1fr;
@@ -264,7 +384,7 @@ input:focus, select:focus{
   .formGrid{ grid-template-columns: repeat(4, 1fr); }
 }
 
-/* Botões */
+/* ===== Botões ===== */
 .btnRow{
   display:flex;
   gap: 10px;
@@ -282,18 +402,21 @@ input:focus, select:focus{
 
 .btn{
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: var(--radius2);
   border: 1px solid transparent;
   font-weight: 900;
   cursor:pointer;
   color: var(--text);
+  transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
 }
+
+.btn:active{ transform: translateY(1px); }
 
 .btn.primary{
   background: linear-gradient(135deg, var(--brand), #1d4ed8);
   box-shadow: 0 12px 30px rgba(59,130,246,0.25);
 }
-.btn.primary:hover{ filter: brightness(1.05); }
+.btn.primary:hover{ filter: brightness(1.06); }
 
 .btn.ghost{
   background: rgba(255,255,255,0.06);
@@ -301,14 +424,65 @@ input:focus, select:focus{
 }
 .btn.ghost:hover{ background: rgba(255,255,255,0.09); }
 
-/* Lista em cards (o script deve preencher #listCards) */
+.btn[disabled]{
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none !important;
+  transform: none !important;
+}
+
+.dangerSoft{
+  border-color: rgba(239,68,68,0.25);
+}
+.dangerSoft:hover{
+  background: rgba(239,68,68,0.10);
+}
+
+/* ===== Summary bar ===== */
+.summaryBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  margin: 8px 0 10px 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.sumItem{ display:flex; align-items:baseline; gap: 8px; }
+.sumLabel{ color: var(--muted); font-size: 12px; }
+.sumDot{ color: rgba(255,255,255,0.22); }
+
+/* ===== Lista em cards ===== */
 .list{
   display:grid;
   gap: 10px;
   margin-top: 8px;
 }
 
-/* Se seu script cria cards, já fica bonito. Se ele ainda cria tabela, não quebra. */
+.groupTitle{
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.12);
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.groupTitle strong{ letter-spacing: 0.2px; }
+.groupMeta{
+  font-size: 12px;
+  color: rgba(255,255,255,0.70);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  white-space: nowrap;
+}
+
 .itemCard{
   border-radius: 16px;
   border: 1px solid var(--stroke);
@@ -317,9 +491,18 @@ input:focus, select:focus{
   display:grid;
   grid-template-columns: 1fr;
   gap: 10px;
+
+  /* animação de entrada */
+  opacity: 0;
+  transform: translateY(8px);
+  animation: cardIn 160ms ease-out forwards;
 }
 @media (min-width: 520px){
   .itemCard{ grid-template-columns: 1fr auto; }
+}
+
+@keyframes cardIn{
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .itemTitle{ font-weight: 900; }
@@ -351,18 +534,27 @@ input:focus, select:focus{
 
 .remove{
   padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius2);
   border: 1px solid rgba(239,68,68,0.35);
   background: rgba(239,68,68,0.12);
   color: rgba(255,255,255,0.9);
   font-weight: 900;
   cursor:pointer;
+  transition: filter 120ms ease, transform 120ms ease;
 }
 .remove:hover{ filter: brightness(1.05); }
+.remove:active{ transform: translateY(1px); }
 
 .footer{
   margin-top: 14px;
   text-align:center;
   color: rgba(255,255,255,0.45);
   font-size: 12px;
+}
+
+.hint{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  text-align: center;
 }

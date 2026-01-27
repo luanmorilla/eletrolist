@@ -13,16 +13,27 @@
 </head>
 <body>
 
+  <!-- Toasts (avisos rápidos) -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
+
   <div class="app">
-    <!-- TOPO: só o nome do APP -->
+    <!-- TOPO -->
     <header class="hero">
       <div class="heroInner">
         <div class="heroLine">
           <span class="shock">ELETROLIST</span>
           <span class="spark">⚡</span>
         </div>
+
         <div class="heroSub">
-          Relação de materiais para eletricista • Rápido no celular • PDF profissional
+          Lista de materiais em segundos • Pronto pro WhatsApp • PDF premium
+        </div>
+
+        <div class="heroBadges">
+          <span class="pill">Modo Obra</span>
+          <span class="pill pill2">PDF Profissional</span>
+          <span class="pill pillGhost">Auto-organiza</span>
+          <span class="pill pillGhost">Salva automático</span>
         </div>
       </div>
     </header>
@@ -57,25 +68,37 @@
       <section class="card glow">
         <div class="cardHead">
           <h2>Adicionar item</h2>
-          <span class="mini">Digite e selecione</span>
+          <span class="mini">Rápido no celular</span>
         </div>
 
         <div class="searchRow">
           <div class="searchBox">
             <span class="searchIcon">⌕</span>
-            <input id="search" type="text" placeholder="Digite: TOM, INT, FIO, DISJ, FITA..." autocomplete="off" />
+            <input id="search" type="text" placeholder="Digite: TOM, INT, FIO, DISJ, COND..." autocomplete="off" />
             <div id="suggestions" class="suggestions" style="display:none;"></div>
           </div>
 
           <label class="field qty">
             <span>Qtd</span>
-            <input id="qtd" type="number" min="1" value="1" />
+            <input id="qtd" type="number" min="1" value="1" inputmode="numeric" />
           </label>
+        </div>
+
+        <!-- Atalhos (chips) -->
+        <div class="chips" id="chips">
+          <button class="chip" type="button" data-key="tomada">TOM</button>
+          <button class="chip" type="button" data-key="interruptor">INT</button>
+          <button class="chip" type="button" data-key="fio">FIO</button>
+          <button class="chip" type="button" data-key="disjuntor">DISJ</button>
+          <button class="chip" type="button" data-key="conduite">COND</button>
+          <button class="chip" type="button" data-key="caixa">CAIXA</button>
+          <button class="chip" type="button" data-key="fita">FITA</button>
+          <button class="chip chipGhost" type="button" id="btnOrganizar">Organizar lista</button>
         </div>
 
         <div id="formArea" class="formArea">
           <div class="emptyState">
-            👉 Digite <strong>TOM</strong> (tomada) ou <strong>INT</strong> (interruptor) para começar.
+            👉 Digite <strong>TOM</strong> (tomada) ou toque nos atalhos para começar.
           </div>
         </div>
 
@@ -89,25 +112,35 @@
       <section class="card">
         <div class="cardHead">
           <h2>Lista final</h2>
-          <span class="mini">Revise antes do PDF</span>
+          <span class="mini">Auto-organiza e soma iguais</span>
         </div>
 
-        <!-- OBS: o script.js que você já tem deve preencher #listCards -->
+        <!-- Resumo (itens / total unidades) -->
+        <div id="listSummary" class="summaryBar" style="display:none;">
+          <div class="sumItem"><span class="sumLabel">Itens</span> <strong id="sumItens">0</strong></div>
+          <div class="sumDot">•</div>
+          <div class="sumItem"><span class="sumLabel">Total</span> <strong id="sumUnidades">0</strong> <span class="sumLabel">unidades</span></div>
+        </div>
+
+        <!-- O script preenche aqui (agrupado por tipo) -->
         <div class="list" id="listCards"></div>
 
         <div class="btnRow bottom">
-          <button class="btn ghost" type="button" id="btnClearAll">Limpar tudo</button>
-          <button class="btn primary" type="button" id="btnPDF">Gerar PDF</button>
+          <button class="btn ghost dangerSoft" type="button" id="btnClearAll">Limpar tudo</button>
+          <button class="btn primary" type="button" id="btnPDF" disabled>Gerar PDF</button>
+        </div>
+
+        <div class="hint">
+          Dica: adicione tudo e gere o PDF pra mandar no WhatsApp do cliente/loja.
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <span>FEITO COM WEB APP <strong>ELETROLIST</strong></span>
+      <span>FEITO COM <strong>ELETROLIST</strong> ⚡</span>
     </footer>
   </div>
 
-  <!-- NÃO MEXI NO SCRIPT -->
   <script src="script.js"></script>
 </body>
 </html>

@@ -21,13 +21,71 @@ const MAX_MOD = { "4x2": 3, "4x4": 6 };
 let selectedKey = null;
 let items = [];
 
+// storage
+const STORAGE_KEY = "eletrolist_v1";
+
+// ==========================
+// TOASTS (UX PREMIUM)
+// ==========================
+function toast(title, desc = "", type = "success") {
+  const box = $("toasts");
+  if (!box) return;
+
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `
+    <div class="toastIcon">${type === "success" ? "✓" : "!"}</div>
+    <div class="toastText">
+      <div class="toastTitle">${escapeHtml(title)}</div>
+      ${desc ? `<div class="toastDesc">${escapeHtml(desc)}</div>` : ""}
+    </div>
+  `;
+  box.appendChild(el);
+
+  setTimeout(() => {
+    el.style.animation = "toastOut 160ms ease forwards";
+    setTimeout(() => el.remove(), 200);
+  }, 1800);
+}
+
+// ==========================
+// STORAGE
+// ==========================
+function saveStorage() {
+  try {
+    const payload = {
+      empresa: ($("empresa")?.value || ""),
+      cliente: ($("cliente")?.value || ""),
+      data: ($("data")?.value || ""),
+      items
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function loadStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+    if (data?.empresa && $("empresa")) $("empresa").value = data.empresa;
+    if (data?.cliente && $("cliente")) $("cliente").value = data.cliente;
+    if (data?.data && $("data")) $("data").value = data.data;
+    if (Array.isArray(data?.items)) items = data.items;
+  } catch (e) {}
+}
+
 // ==========================
 // INIT
 // ==========================
 function init() {
-  // data hoje
+  // data hoje (se não tiver salvo)
   const hoje = new Date().toISOString().slice(0, 10);
-  if ($("data")) $("data").value = hoje;
+  if ($("data") && !$("data").value) $("data").value = hoje;
+
+  // carregar rascunho salvo
+  loadStorage();
 
   // eventos
   $("search").addEventListener("input", onSearchInput);
@@ -44,15 +102,45 @@ function init() {
     if (!confirm("Tem certeza que deseja limpar tudo?")) return;
     items = [];
     renderCards();
+    updateSummaryAndControls();
+    saveStorage();
+    clearSelection();
+    toast("Lista limpa", "Tudo foi removido.");
   });
 
   $("btnPDF").addEventListener("click", generatePDF);
 
+  // chips
+  document.querySelectorAll(".chip[data-key]").forEach(btn => {
+    btn.addEventListener("click", () => selectItem(btn.dataset.key));
+  });
+
+  // organizar lista
+  const btnOrg = $("btnOrganizar");
+  if (btnOrg) btnOrg.addEventListener("click", () => {
+    organizeAndMergeItems();
+    renderCards();
+    updateSummaryAndControls();
+    saveStorage();
+    toast("Lista organizada", "Itens iguais foram somados.");
+  });
+
+  // salvar quando editar dados do documento
+  ["empresa", "cliente", "data"].forEach(id => {
+    const el = $(id);
+    if (el) el.addEventListener("input", saveStorage);
+    if (el) el.addEventListener("change", saveStorage);
+  });
+
   // render inicial
   renderForm(null);
   renderCards();
+  updateSummaryAndControls();
 }
 
+// ==========================
+// BUSCA
+// ==========================
 function onSearchInput() {
   const q = $("search").value.trim().toLowerCase();
   const sug = $("suggestions");
@@ -401,6 +489,7 @@ function renderForm(key) {
   }
 
   if (key === "fio") {
+    // ✅ melhoria: metragem
     area.innerHTML = `
       <div class="formGrid">
         <label class="field">
@@ -423,6 +512,11 @@ function renderForm(key) {
             <option>10 mm²</option>
             <option>16 mm²</option>
           </select>
+        </label>
+
+        <label class="field">
+          <span>Metros</span>
+          <input id="metros" type="number" min="1" placeholder="Ex: 25" />
         </label>
 
         <label class="field">
@@ -680,23 +774,72 @@ function syncComboLimit() {
 }
 
 // ==========================
+// ORGANIZAR + SOMAR IGUAIS (melhoria #4)
+// ==========================
+function organizeAndMergeItems() {
+  // soma iguais por chave tipo|descricao
+  const map = new Map();
+  for (const it of items) {
+    const key = `${it.tipo}|||${it.descricao}`;
+    const prev = map.get(key);
+    if (prev) prev.qtd += Number(it.qtd || 0);
+    else map.set(key, { ...it, qtd: Number(it.qtd || 0) });
+  }
+
+  const merged = Array.from(map.values());
+
+  // ordena por tipo e depois por descrição
+  merged.sort((a, b) => {
+    const t = a.tipo.localeCompare(b.tipo, "pt-BR");
+    if (t !== 0) return t;
+    return a.descricao.localeCompare(b.descricao, "pt-BR");
+  });
+
+  items = merged;
+}
+
+// ==========================
+// RESUMO + CONTROLES (melhoria #5 + PDF disabled)
+// ==========================
+function updateSummaryAndControls() {
+  const summary = $("listSummary");
+  const btnPDF = $("btnPDF");
+
+  if (btnPDF) btnPDF.disabled = (items.length === 0);
+
+  if (!summary) return;
+
+  if (items.length === 0) {
+    summary.style.display = "none";
+    return;
+  }
+
+  const totalItens = items.length;
+  const totalUnidades = items.reduce((s, it) => s + Number(it.qtd || 0), 0);
+
+  $("sumItens").textContent = String(totalItens);
+  $("sumUnidades").textContent = String(totalUnidades);
+  summary.style.display = "flex";
+}
+
+// ==========================
 // ADICIONAR / LIMPAR
 // ==========================
 function addToList() {
   if (!selectedKey) {
-    alert("Digite e selecione um item na busca primeiro.");
+    toast("Selecione um item", "Digite ou use os atalhos.", "danger");
     return;
   }
 
   const qtd = Number($("qtd").value || 0);
   if (!qtd || qtd <= 0) {
-    alert("Quantidade precisa ser maior que 0.");
+    toast("Quantidade inválida", "Precisa ser maior que 0.", "danger");
     return;
   }
 
   const built = buildDescription(selectedKey);
   if (!built.ok) {
-    alert(built.error);
+    toast("Faltou preencher", built.error, "danger");
     return;
   }
 
@@ -706,8 +849,17 @@ function addToList() {
     qtd,
   });
 
+  // soma iguais e ordena (deixa sempre limpo)
+  organizeAndMergeItems();
+
   renderCards();
-  $("qtd").value = 1;
+  updateSummaryAndControls();
+
+  // ✅ melhoria: limpar seleção após adicionar
+  clearSelection();
+
+  saveStorage();
+  toast("Item adicionado", "Pronto. Próximo item.");
 }
 
 function clearSelection() {
@@ -827,10 +979,15 @@ function buildDescription(key) {
   if (key === "fio") {
     const tipo = val("fioTipo");
     const bitola = val("bitola");
+    const metros = Number(val("metros") || 0); // ✅
     const cor = val("fioCor");
     const obs = val("obs");
 
-    const parts = [`${tipo} — ${bitola}`];
+    if (!metros || metros <= 0) {
+      return { ok:false, error:"Informe a metragem (metros) do cabo/fio." };
+    }
+
+    const parts = [`${tipo} — ${bitola} — ${metros} metros`];
     if (cor) parts.push(`Cor: ${cor}`);
     if (obs) parts.push(`Obs: ${obs}`);
 
@@ -892,7 +1049,7 @@ function buildDescription(key) {
 }
 
 // ==========================
-// LISTA EM CARDS (MOBILE)
+// LISTA EM CARDS (AGRUPADA POR TIPO)
 // ==========================
 function renderCards() {
   const container = $("listCards");
@@ -907,68 +1064,110 @@ function renderCards() {
     return;
   }
 
-  items.forEach((it, idx) => {
-    const card = document.createElement("div");
-    card.className = "itemCard";
+  // agrupa por tipo
+  const groups = {};
+  for (const it of items) {
+    if (!groups[it.tipo]) groups[it.tipo] = [];
+    groups[it.tipo].push(it);
+  }
 
-    card.innerHTML = `
-      <div>
-        <div class="itemTitle">${escapeHtml(it.tipo)}</div>
-        <div class="itemDesc">${escapeHtml(it.descricao)}</div>
-      </div>
+  const tipos = Object.keys(groups).sort((a,b)=>a.localeCompare(b,"pt-BR"));
 
-      <div class="itemMeta">
-        <div class="badge">Qtd: ${it.qtd}</div>
-        <button class="remove" type="button" data-idx="${idx}">Remover</button>
-      </div>
+  tipos.forEach(tipo => {
+    const totalGrupo = groups[tipo].reduce((s, it) => s + Number(it.qtd || 0), 0);
+
+    const head = document.createElement("div");
+    head.className = "groupTitle";
+    head.innerHTML = `
+      <strong>${escapeHtml(tipo)}</strong>
+      <span class="groupMeta">${totalGrupo} un</span>
     `;
+    container.appendChild(head);
 
-    card.querySelector(".remove").addEventListener("click", () => {
-      items.splice(idx, 1);
-      renderCards();
+    groups[tipo].forEach((it, idx) => {
+      const card = document.createElement("div");
+      card.className = "itemCard";
+
+      card.innerHTML = `
+        <div>
+          <div class="itemTitle">${escapeHtml(it.tipo)}</div>
+          <div class="itemDesc">${escapeHtml(it.descricao)}</div>
+        </div>
+
+        <div class="itemMeta">
+          <div class="badge">Qtd: ${it.qtd}</div>
+          <button class="remove" type="button">Remover</button>
+        </div>
+      `;
+
+      card.querySelector(".remove").addEventListener("click", () => {
+        // remove pelo match (seguro mesmo se tiver reordenação)
+        const i = items.findIndex(x => x.tipo === it.tipo && x.descricao === it.descricao);
+        if (i >= 0) items.splice(i, 1);
+        saveStorage();
+        renderCards();
+        updateSummaryAndControls();
+        toast("Item removido");
+      });
+
+      container.appendChild(card);
     });
-
-    container.appendChild(card);
   });
 }
 
 // ==========================
-// PDF PROFISSIONAL (AutoTable)
+// PDF PREMIUM (letra maior + empresa elegante + resumo)
 // ==========================
 function generatePDF() {
+  if (items.length === 0) {
+    toast("Sem itens", "Adicione itens antes do PDF.", "danger");
+    return;
+  }
+
+  const btn = $("btnPDF");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Gerando...";
+  }
+
   const empresa = ($("empresa").value || "Empresa").trim();
   const cliente = ($("cliente").value || "Cliente").trim();
   const dataISO = $("data").value || new Date().toISOString().slice(0, 10);
 
-  if (items.length === 0) {
-    alert("Adicione itens antes de gerar o PDF.");
-    return;
-  }
+  const totalItens = items.length;
+  const totalUnidades = items.reduce((s, it) => s + Number(it.qtd || 0), 0);
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
   const AZUL = [11, 94, 215];
-  const CINZA = [60, 60, 60];
+  const CINZA = [40, 40, 40];
 
   const drawHeader = () => {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.setTextColor(...CINZA);
     doc.text("RELAÇÃO DE MATERIAIS ELÉTRICOS", 105, 14, { align: "center" });
 
-    doc.setFontSize(12);
+    // empresa premium
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
     doc.setTextColor(...AZUL);
-    doc.text(empresa, 14, 24);
+    doc.text(empresa.toUpperCase(), 14, 28);
+
 
     doc.setDrawColor(210);
-    doc.line(14, 27, 196, 27);
+    doc.line(14, 31, 196, 31);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     doc.setTextColor(...CINZA);
-    doc.text(`Cliente: ${cliente}`, 14, 33);
-    doc.text(`Data: ${formatBR(dataISO)}`, 14, 38);
+    doc.text(`Cliente: ${cliente}`, 14, 36);
+    doc.text(`Data: ${formatBR(dataISO)}`, 14, 42);
+
+    doc.setFontSize(11);
+    doc.setTextColor(80);
+    doc.text(`Itens: ${totalItens}  •  Total: ${totalUnidades} unidades`, 14, 48);
   };
 
   const drawFooter = () => {
@@ -979,7 +1178,7 @@ function generatePDF() {
     doc.setFontSize(9);
     doc.setTextColor(140);
     doc.text(
-      `FEITO COM WEB APP ELETROLIST — Página ${pageNumber}/${pageCount}`,
+      `Gerado no ELETROLIST — Página ${pageNumber}/${pageCount}`,
       105,
       290,
       { align: "center" }
@@ -991,26 +1190,27 @@ function generatePDF() {
   drawHeader();
 
   doc.autoTable({
-    startY: 45,
+    startY: 54,
     head: [["Tipo", "Descrição", "Qtd"]],
     body: bodyRows,
     styles: {
       font: "helvetica",
-      fontSize: 10,
-      cellPadding: 3,
+      fontSize: 11,      // ✅ maior
+      cellPadding: 4,    // ✅ mais respiro
       overflow: "linebreak",
       valign: "top",
       textColor: 20,
     },
     columnStyles: {
-      0: { cellWidth: 48 },
-      1: { cellWidth: 120 },
-      2: { cellWidth: 14, halign: "right" },
+      0: { cellWidth: 50 },
+      1: { cellWidth: 118 },
+      2: { cellWidth: 16, halign: "right" },
     },
     headStyles: {
       fillColor: AZUL,
       textColor: 255,
       fontStyle: "bold",
+      fontSize: 12, // ✅ header maior
     },
     alternateRowStyles: {
       fillColor: [245, 247, 250],
@@ -1022,7 +1222,17 @@ function generatePDF() {
     },
   });
 
-  doc.save("relacao-materiais-eletrolist.pdf");
+  const safeEmpresa = empresa.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "_");
+  const safeCliente = cliente.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "_");
+  const fileName = `${safeEmpresa || "Empresa"}_${safeCliente || "Cliente"}_${dataISO}_ELETROLIST.pdf`;
+
+  doc.save(fileName);
+
+  if (btn) {
+    btn.textContent = "Gerar PDF";
+    btn.disabled = (items.length === 0);
+  }
+  toast("PDF gerado", "Pronto para enviar no WhatsApp.");
 }
 
 // ==========================
