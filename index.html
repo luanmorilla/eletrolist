@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ELETROLIST — Relação de Materiais Elétricos</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+  <div class="app">
+    <!-- TOPO: só o nome do APP -->
+    <header class="hero">
+      <div class="heroInner">
+        <div class="heroLine">
+          <span class="shock">ELETROLIST</span>
+          <span class="spark">⚡</span>
+        </div>
+        <div class="heroSub">
+          Relação de materiais para eletricista • Rápido no celular • PDF profissional
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- Card: Dados -->
+      <section class="card">
+        <div class="cardHead">
+          <h2>Dados do documento</h2>
+          <span class="mini">Preencha uma vez</span>
+        </div>
+
+        <div class="grid">
+          <label class="field">
+            <span>Empresa</span>
+            <input id="empresa" type="text" placeholder="Ex: Morillas LED" />
+          </label>
+
+          <label class="field">
+            <span>Cliente</span>
+            <input id="cliente" type="text" placeholder="Nome do cliente" />
+          </label>
+
+          <label class="field">
+            <span>Data</span>
+            <input id="data" type="date" />
+          </label>
+        </div>
+      </section>
+
+      <!-- Card: Busca -->
+      <section class="card glow">
+        <div class="cardHead">
+          <h2>Adicionar item</h2>
+          <span class="mini">Digite e selecione</span>
+        </div>
+
+        <div class="searchRow">
+          <div class="searchBox">
+            <span class="searchIcon">⌕</span>
+            <input id="search" type="text" placeholder="Digite: TOM, INT, FIO, DISJ, FITA..." autocomplete="off" />
+            <div id="suggestions" class="suggestions" style="display:none;"></div>
+          </div>
+
+          <label class="field qty">
+            <span>Qtd</span>
+            <input id="qtd" type="number" min="1" value="1" />
+          </label>
+        </div>
+
+        <div id="formArea" class="formArea">
+          <div class="emptyState">
+            👉 Digite <strong>TOM</strong> (tomada) ou <strong>INT</strong> (interruptor) para começar.
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn primary" type="button" id="btnAdd">Adicionar</button>
+          <button class="btn ghost" type="button" id="btnClearForm">Limpar</button>
+        </div>
+      </section>
+
+      <!-- Card: Lista -->
+      <section class="card">
+        <div class="cardHead">
+          <h2>Lista final</h2>
+          <span class="mini">Revise antes do PDF</span>
+        </div>
+
+        <!-- OBS: o script.js que você já tem deve preencher #listCards -->
+        <div class="list" id="listCards"></div>
+
+        <div class="btnRow bottom">
+          <button class="btn ghost" type="button" id="btnClearAll">Limpar tudo</button>
+          <button class="btn primary" type="button" id="btnPDF">Gerar PDF</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>FEITO COM WEB APP <strong>ELETROLIST</strong></span>
+    </footer>
+  </div>
+
+  <!-- NÃO MEXI NO SCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
