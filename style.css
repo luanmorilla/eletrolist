@@ -102,11 +102,11 @@ body{
   box-shadow: var(--shadow);
   padding: 18px 14px;
   text-align: center;
-  position: sticky;
-  top: 10px;
-  z-index: 50;
+  position: relative; /* NÃO acompanha a rolagem */
+  z-index: 1;
   backdrop-filter: blur(10px);
 }
+
 
 .heroInner{ display:flex; flex-direction:column; gap: 8px; align-items:center; }
 
