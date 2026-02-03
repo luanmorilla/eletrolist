@@ -25,6 +25,15 @@ let items = [];
 const STORAGE_KEY = "eletrolist_v1";
 
 // ==========================
+// ID ÚNICO (para remover certinho)
+// ==========================
+function makeId() {
+  // crypto.randomUUID() é o melhor; fallback pra browsers antigos
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+// ==========================
 // TOASTS (UX PREMIUM)
 // ==========================
 function toast(title, desc = "", type = "success") {
@@ -75,6 +84,35 @@ function loadStorage() {
     if (Array.isArray(data?.items)) items = data.items;
   } catch (e) {}
 }
+
+// ==========================
+// QTD VISIBILIDADE (para FIO)
+// ==========================
+function setQtyModeForKey(key) {
+  const qtyLabel = document.querySelector(".field.qty");
+  const qtyInput = $("qtd");
+  const searchRow = document.querySelector(".searchRow");
+  if (!qtyLabel || !qtyInput) return;
+
+  if (key === "fio") {
+    qtyLabel.style.display = "none";
+    qtyInput.value = 1;
+    qtyInput.disabled = true;
+
+    // ✅ ajusta layout do grid quando Qtd some
+    if (searchRow) searchRow.classList.add("qtyHidden");
+    return;
+  }
+
+  qtyLabel.style.display = "";
+  qtyInput.disabled = false;
+
+  if (searchRow) searchRow.classList.remove("qtyHidden");
+
+  const v = Number(qtyInput.value || 0);
+  if (!v || v <= 0) qtyInput.value = 1;
+}
+
 
 // ==========================
 // INIT
@@ -134,6 +172,7 @@ function init() {
 
   // render inicial
   renderForm(null);
+  setQtyModeForKey(null);
   renderCards();
   updateSummaryAndControls();
 }
@@ -188,6 +227,10 @@ function selectItem(key) {
   $("search").value = found ? found.label : key;
 
   hideSuggestions();
+
+  // ✅ Ajuste Qtd para FIO (e volta ao normal nos demais)
+  setQtyModeForKey(key);
+
   renderForm(key);
 }
 
@@ -774,7 +817,7 @@ function syncComboLimit() {
 }
 
 // ==========================
-// ORGANIZAR + SOMAR IGUAIS (melhoria #4)
+// ORGANIZAR + SOMAR IGUAIS
 // ==========================
 function organizeAndMergeItems() {
   // soma iguais por chave tipo|descricao
@@ -799,7 +842,7 @@ function organizeAndMergeItems() {
 }
 
 // ==========================
-// RESUMO + CONTROLES (melhoria #5 + PDF disabled)
+// RESUMO + CONTROLES
 // ==========================
 function updateSummaryAndControls() {
   const summary = $("listSummary");
@@ -831,7 +874,11 @@ function addToList() {
     return;
   }
 
-  const qtd = Number($("qtd").value || 0);
+  // ✅ Para FIO, Qtd não importa (fica travado em 1 e oculto),
+  // mas ainda assim garantimos valor seguro.
+  let qtd = Number($("qtd")?.value || 0);
+  if (selectedKey === "fio") qtd = 1;
+
   if (!qtd || qtd <= 0) {
     toast("Quantidade inválida", "Precisa ser maior que 0.", "danger");
     return;
@@ -844,6 +891,7 @@ function addToList() {
   }
 
   items.push({
+    id: makeId(),           // ✅ id único
     tipo: built.tipo,
     descricao: built.text,
     qtd,
@@ -855,7 +903,7 @@ function addToList() {
   renderCards();
   updateSummaryAndControls();
 
-  // ✅ melhoria: limpar seleção após adicionar
+  // limpar seleção após adicionar
   clearSelection();
 
   saveStorage();
@@ -866,6 +914,10 @@ function clearSelection() {
   selectedKey = null;
   $("search").value = "";
   $("qtd").value = 1;
+
+  // ✅ volta Qtd ao normal quando limpar
+  setQtyModeForKey(null);
+
   renderForm(null);
   hideSuggestions();
 }
@@ -979,7 +1031,7 @@ function buildDescription(key) {
   if (key === "fio") {
     const tipo = val("fioTipo");
     const bitola = val("bitola");
-    const metros = Number(val("metros") || 0); // ✅
+    const metros = Number(val("metros") || 0);
     const cor = val("fioCor");
     const obs = val("obs");
 
@@ -1084,7 +1136,7 @@ function renderCards() {
     `;
     container.appendChild(head);
 
-    groups[tipo].forEach((it, idx) => {
+    groups[tipo].forEach((it) => {
       const card = document.createElement("div");
       card.className = "itemCard";
 
@@ -1100,9 +1152,9 @@ function renderCards() {
         </div>
       `;
 
+      // ✅ remove por ID (sempre remove o item certo)
       card.querySelector(".remove").addEventListener("click", () => {
-        // remove pelo match (seguro mesmo se tiver reordenação)
-        const i = items.findIndex(x => x.tipo === it.tipo && x.descricao === it.descricao);
+        const i = items.findIndex(x => x.id === it.id);
         if (i >= 0) items.splice(i, 1);
         saveStorage();
         renderCards();
@@ -1155,7 +1207,6 @@ function generatePDF() {
     doc.setTextColor(...AZUL);
     doc.text(empresa.toUpperCase(), 14, 28);
 
-
     doc.setDrawColor(210);
     doc.line(14, 31, 196, 31);
 
@@ -1195,8 +1246,8 @@ function generatePDF() {
     body: bodyRows,
     styles: {
       font: "helvetica",
-      fontSize: 11,      // ✅ maior
-      cellPadding: 4,    // ✅ mais respiro
+      fontSize: 11,
+      cellPadding: 4,
       overflow: "linebreak",
       valign: "top",
       textColor: 20,
@@ -1210,7 +1261,7 @@ function generatePDF() {
       fillColor: AZUL,
       textColor: 255,
       fontStyle: "bold",
-      fontSize: 12, // ✅ header maior
+      fontSize: 12,
     },
     alternateRowStyles: {
       fillColor: [245, 247, 250],

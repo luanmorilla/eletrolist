@@ -558,3 +558,7 @@ input:disabled{
   font-size: 12px;
   text-align: center;
 }
+/* Quando a Qtd é escondida (modo FIO), a linha de busca vira 1 coluna */
+.searchRow.qtyHidden{
+  grid-template-columns: 1fr !important;
+}
