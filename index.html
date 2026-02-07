@@ -1,3 +1,4 @@
+<!-- index.html (COMPLETO) -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -74,7 +75,7 @@
         <div class="searchRow">
           <div class="searchBox">
             <span class="searchIcon">⌕</span>
-            <input id="search" type="text" placeholder="Digite: TOM, INT, FIO, DISJ, COND..." autocomplete="off" />
+            <input id="search" type="text" placeholder="Digite: tomada, fio, fita led, arandela, bucha..." autocomplete="off" />
             <div id="suggestions" class="suggestions" style="display:none;"></div>
           </div>
 
@@ -84,21 +85,22 @@
           </label>
         </div>
 
-        <!-- Atalhos (chips) -->
-        <div class="chips" id="chips">
-          <button class="chip" type="button" data-key="tomada">TOM</button>
-          <button class="chip" type="button" data-key="interruptor">INT</button>
-          <button class="chip" type="button" data-key="fio">FIO</button>
-          <button class="chip" type="button" data-key="disjuntor">DISJ</button>
-          <button class="chip" type="button" data-key="conduite">COND</button>
-          <button class="chip" type="button" data-key="caixa">CAIXA</button>
-          <button class="chip" type="button" data-key="fita">FITA</button>
+        <!-- CATEGORIAS (chips principais) -->
+        <div class="chips chipsMain" id="chipCategories">
+          <button class="chip" type="button" data-cat="eletrica">🔌 Elétrica</button>
+          <button class="chip" type="button" data-cat="iluminacao">💡 Iluminação</button>
+          <button class="chip" type="button" data-cat="fixacao">🔩 Fixação</button>
+          <button class="chip" type="button" data-cat="automacao">⚙️ Automação</button>
+
           <button class="chip chipGhost" type="button" id="btnOrganizar">Organizar lista</button>
         </div>
 
+        <!-- SUB-ITENS (dinâmico) -->
+        <div class="chips chipsSub" id="chipItems" style="display:none;"></div>
+
         <div id="formArea" class="formArea">
           <div class="emptyState">
-            👉 Digite <strong>TOM</strong> (tomada) ou toque nos atalhos para começar.
+            👉 Escolha uma categoria acima ou digite no campo de busca para começar.
           </div>
         </div>
 

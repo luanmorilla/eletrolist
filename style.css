@@ -562,3 +562,124 @@ input:disabled{
 .searchRow.qtyHidden{
   grid-template-columns: 1fr !important;
 }
+/* =========================
+   MOBILE PRO (visual da foto)
+   Cole este bloco no FINAL do style.css
+========================= */
+
+/* melhora tipografia no mobile */
+@media (max-width: 520px){
+  .app{ padding: 10px; }
+  h2{ font-size: 15px; }
+  input, select{ padding: 14px 12px; font-size: 15px; }
+  .mini{ font-size: 11px; padding: 6px 8px; }
+}
+
+/* HERO mais compacto no celular */
+@media (max-width: 520px){
+  .hero{ padding: 14px 12px; border-radius: 18px; }
+  .shock{ font-size: 24px; letter-spacing: 1px; }
+  .heroBadges{ gap: 6px; }
+  .pill{ padding: 6px 9px; font-size: 11px; }
+  .heroSub{ font-size: 11px; }
+}
+
+/* Search box “premium” */
+.searchBox input{
+  height: 52px;
+  border-radius: 16px;
+}
+.searchIcon{
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+/* Chips viram “pílulas premium” */
+.chips{
+  gap: 10px;
+  margin-top: 12px;
+}
+.chip{
+  padding: 12px 14px;
+  border-radius: 999px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+}
+.chip:hover{ filter: brightness(1.08); }
+.chip:active{ transform: translateY(1px) scale(0.99); }
+
+/* FormArea mais “app” */
+.formArea{
+  border-style: solid;
+  border-color: rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.22);
+}
+
+/* Botões mais altos */
+.btn{
+  min-height: 48px;
+  border-radius: 16px;
+}
+
+/* Lista com mais “separação” */
+.itemCard{
+  border-radius: 18px;
+  background: rgba(0,0,0,0.22);
+}
+
+/* =========================
+   BARRA FIXA DE AÇÃO (rodapé)
+========================= */
+.mobileBar{
+  position: sticky;
+  bottom: 10px;
+  z-index: 50;
+  margin-top: 12px;
+
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(7, 10, 18, 0.82);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.mobileBar .count{
+  color: rgba(255,255,255,0.72);
+  font-weight: 900;
+  font-size: 12px;
+  padding-left: 6px;
+}
+
+.mobileBar .btnAddBig{
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-weight: 900;
+  cursor: pointer;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--brand), #1d4ed8);
+  box-shadow: 0 14px 34px rgba(59,130,246,0.26);
+  min-width: 160px;
+  text-align: center;
+}
+.mobileBar .btnAddBig:active{ transform: translateY(1px); }
+
+.mobileBar .btnSmall{
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.90);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+@media (min-width: 521px){
+  /* no desktop, não precisa da barra fixa */
+  .mobileBar{ display: none; }
+}

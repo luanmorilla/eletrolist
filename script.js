@@ -1,18 +1,75 @@
+// script.js (COMPLETO) — UX PRO: categorias + sub-itens
 const $ = (id) => document.getElementById(id);
 
 // ==========================
 // CATÁLOGO (BUSCA)
 // ==========================
 const CATALOG = [
-  { key: "tomada", label: "Tomada (ponto/placa)", tag: "TOM" },
-  { key: "interruptor", label: "Interruptor (ponto/placa)", tag: "INT" },
-  { key: "tomada_interruptor", label: "Tomada + Interruptor (mesma placa)", tag: "MISTO" },
-  { key: "fio", label: "Fio / Cabo", tag: "FIO" },
-  { key: "disjuntor", label: "Disjuntor / DR / DPS", tag: "DISJ" },
-  { key: "conduite", label: "Conduíte / Eletroduto", tag: "COND" },
-  { key: "caixa", label: "Caixas (4x2 / 4x4 / octogonal...)", tag: "CAIXA" },
-  { key: "fita", label: "Fita isolante", tag: "FITA" },
+  { key: "tomada", label: "Tomada (ponto/placa)", tag: "ELÉTRICA" },
+  { key: "interruptor", label: "Interruptor (ponto/placa)", tag: "ELÉTRICA" },
+  { key: "tomada_interruptor", label: "Tomada + Interruptor (mesma placa)", tag: "ELÉTRICA" },
+  { key: "fio", label: "Fio / Cabo", tag: "ELÉTRICA" },
+  { key: "disjuntor", label: "Disjuntor / DR / DPS", tag: "ELÉTRICA" },
+  { key: "conduite", label: "Conduíte / Eletroduto", tag: "ELÉTRICA" },
+  { key: "caixa", label: "Caixas (4x2 / 4x4 / octogonal...)", tag: "ELÉTRICA" },
+
+  // LED / Iluminação
+  { key: "fita", label: "Fita de LED (127/220 • 3000K/4000K/6500K)", tag: "ILUMINAÇÃO" },
+  { key: "perfil_led", label: "Perfil de LED (embutir/sobrepor • branco/preto)", tag: "ILUMINAÇÃO" },
+  { key: "par20", label: "Lâmpada PAR20 (quadrada recuada)", tag: "ILUMINAÇÃO" },
+  { key: "mr16", label: "Lâmpada MR16", tag: "ILUMINAÇÃO" },
+  { key: "arandela", label: "Arandela (preta/branca • embutir/sobrepor • definir modelo)", tag: "ILUMINAÇÃO" },
+  { key: "driver_led", label: "Driver / Fonte LED (12V/24V • potência)", tag: "ILUMINAÇÃO" },
+  { key: "conector_fita_led", label: "Conector p/ Fita LED (reto / L / emenda)", tag: "ILUMINAÇÃO" },
+  { key: "difusor_perfil", label: "Difusor do Perfil (leitoso/transparente)", tag: "ILUMINAÇÃO" },
+  { key: "trilho", label: "Trilho eletrificado (preto/branco)", tag: "ILUMINAÇÃO" },
+  { key: "spot_trilho", label: "Spot p/ trilho (definir modelo)", tag: "ILUMINAÇÃO" },
+
+  // Automação
+  { key: "sensor_presenca", label: "Sensor de presença (teto/parede)", tag: "AUTOMAÇÃO" },
+  { key: "fotocelula", label: "Fotocélula (sensor crepuscular)", tag: "AUTOMAÇÃO" },
+
+  // Fixação
+  { key: "bucha", label: "Bucha (6 / 8 / 10)", tag: "FIXAÇÃO" },
+  { key: "parafuso_phillips", label: "Parafuso Phillips", tag: "FIXAÇÃO" },
+  { key: "fita_isolante", label: "Fita isolante (PVC / auto-fusão)", tag: "FIXAÇÃO" },
 ];
+
+// ==========================
+// CATEGORIAS (chips PRO)
+// ==========================
+const CATEGORY_MAP = {
+  eletrica: [
+    { key: "tomada", label: "Tomada" },
+    { key: "interruptor", label: "Interruptor" },
+    { key: "tomada_interruptor", label: "Tomada + Interruptor" },
+    { key: "fio", label: "Fio / Cabo" },
+    { key: "disjuntor", label: "Disjuntor / DR / DPS" },
+    { key: "conduite", label: "Conduíte" },
+    { key: "caixa", label: "Caixa elétrica" },
+  ],
+  iluminacao: [
+    { key: "fita", label: "Fita LED" },
+    { key: "perfil_led", label: "Perfil LED" },
+    { key: "arandela", label: "Arandela" },
+    { key: "par20", label: "Lâmpada PAR20" },
+    { key: "mr16", label: "Lâmpada MR16" },
+    { key: "driver_led", label: "Driver / Fonte" },
+    { key: "trilho", label: "Trilho" },
+    { key: "spot_trilho", label: "Spot p/ trilho" },
+    { key: "conector_fita_led", label: "Conector p/ fita" },
+    { key: "difusor_perfil", label: "Difusor do perfil" },
+  ],
+  fixacao: [
+    { key: "bucha", label: "Bucha" },
+    { key: "parafuso_phillips", label: "Parafuso" },
+    { key: "fita_isolante", label: "Fita isolante" },
+  ],
+  automacao: [
+    { key: "sensor_presenca", label: "Sensor de presença" },
+    { key: "fotocelula", label: "Fotocélula" },
+  ],
+};
 
 // limites reais
 const MAX_MOD = { "4x2": 3, "4x4": 6 };
@@ -25,16 +82,15 @@ let items = [];
 const STORAGE_KEY = "eletrolist_v1";
 
 // ==========================
-// ID ÚNICO (para remover certinho)
+// ID ÚNICO
 // ==========================
 function makeId() {
-  // crypto.randomUUID() é o melhor; fallback pra browsers antigos
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
 // ==========================
-// TOASTS (UX PREMIUM)
+// TOASTS
 // ==========================
 function toast(title, desc = "", type = "success") {
   const box = $("toasts");
@@ -86,7 +142,7 @@ function loadStorage() {
 }
 
 // ==========================
-// QTD VISIBILIDADE (para FIO)
+// QTD VISIBILIDADE (FIO)
 // ==========================
 function setQtyModeForKey(key) {
   const qtyLabel = document.querySelector(".field.qty");
@@ -98,34 +154,53 @@ function setQtyModeForKey(key) {
     qtyLabel.style.display = "none";
     qtyInput.value = 1;
     qtyInput.disabled = true;
-
-    // ✅ ajusta layout do grid quando Qtd some
     if (searchRow) searchRow.classList.add("qtyHidden");
     return;
   }
 
   qtyLabel.style.display = "";
   qtyInput.disabled = false;
-
   if (searchRow) searchRow.classList.remove("qtyHidden");
 
   const v = Number(qtyInput.value || 0);
   if (!v || v <= 0) qtyInput.value = 1;
 }
 
+// ==========================
+// CHIPS PRO: SUB-ITENS
+// ==========================
+function renderSubChips(category) {
+  const box = $("chipItems");
+  if (!box) return;
+
+  box.innerHTML = "";
+  const list = CATEGORY_MAP[category];
+  if (!list) {
+    box.style.display = "none";
+    return;
+  }
+
+  list.forEach(item => {
+    const btn = document.createElement("button");
+    btn.className = "chip";
+    btn.type = "button";
+    btn.textContent = item.label;
+    btn.addEventListener("click", () => selectItem(item.key));
+    box.appendChild(btn);
+  });
+
+  box.style.display = "flex";
+}
 
 // ==========================
 // INIT
 // ==========================
 function init() {
-  // data hoje (se não tiver salvo)
   const hoje = new Date().toISOString().slice(0, 10);
   if ($("data") && !$("data").value) $("data").value = hoje;
 
-  // carregar rascunho salvo
   loadStorage();
 
-  // eventos
   $("search").addEventListener("input", onSearchInput);
   $("search").addEventListener("focus", onSearchInput);
 
@@ -148,9 +223,9 @@ function init() {
 
   $("btnPDF").addEventListener("click", generatePDF);
 
-  // chips
-  document.querySelectorAll(".chip[data-key]").forEach(btn => {
-    btn.addEventListener("click", () => selectItem(btn.dataset.key));
+  // categorias
+  document.querySelectorAll("[data-cat]").forEach(btn => {
+    btn.addEventListener("click", () => renderSubChips(btn.dataset.cat));
   });
 
   // organizar lista
@@ -163,14 +238,13 @@ function init() {
     toast("Lista organizada", "Itens iguais foram somados.");
   });
 
-  // salvar quando editar dados do documento
+  // salvar ao editar dados
   ["empresa", "cliente", "data"].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener("input", saveStorage);
     if (el) el.addEventListener("change", saveStorage);
   });
 
-  // render inicial
   renderForm(null);
   setQtyModeForKey(null);
   renderCards();
@@ -195,7 +269,7 @@ function onSearchInput() {
       x.tag.toLowerCase().includes(q) ||
       x.key.toLowerCase().includes(q)
     )
-    .slice(0, 8);
+    .slice(0, 10);
 
   if (filtered.length === 0) {
     hideSuggestions();
@@ -227,10 +301,7 @@ function selectItem(key) {
   $("search").value = found ? found.label : key;
 
   hideSuggestions();
-
-  // ✅ Ajuste Qtd para FIO (e volta ao normal nos demais)
   setQtyModeForKey(key);
-
   renderForm(key);
 }
 
@@ -243,12 +314,13 @@ function renderForm(key) {
   if (!key) {
     area.innerHTML = `
       <div class="emptyState">
-        Digite no campo de busca e selecione um item para aparecerem as opções.
+        Escolha uma categoria acima ou digite no campo de busca e selecione um item.
       </div>
     `;
     return;
   }
 
+  // --- Tomada ---
   if (key === "tomada") {
     area.innerHTML = `
       <div class="formGrid">
@@ -342,6 +414,7 @@ function renderForm(key) {
     return;
   }
 
+  // --- Interruptor ---
   if (key === "interruptor") {
     area.innerHTML = `
       <div class="formGrid">
@@ -404,6 +477,7 @@ function renderForm(key) {
     return;
   }
 
+  // --- Misto ---
   if (key === "tomada_interruptor") {
     area.innerHTML = `
       <div class="formGrid">
@@ -531,8 +605,8 @@ function renderForm(key) {
     return;
   }
 
+  // --- Fio ---
   if (key === "fio") {
-    // ✅ melhoria: metragem
     area.innerHTML = `
       <div class="formGrid">
         <label class="field">
@@ -583,6 +657,7 @@ function renderForm(key) {
     return;
   }
 
+  // --- Disjuntor ---
   if (key === "disjuntor") {
     area.innerHTML = `
       <div class="formGrid">
@@ -626,6 +701,7 @@ function renderForm(key) {
     return;
   }
 
+  // --- Conduíte ---
   if (key === "conduite") {
     area.innerHTML = `
       <div class="formGrid">
@@ -668,6 +744,7 @@ function renderForm(key) {
     return;
   }
 
+  // --- Caixas ---
   if (key === "caixa") {
     area.innerHTML = `
       <div class="formGrid">
@@ -709,7 +786,548 @@ function renderForm(key) {
     return;
   }
 
+  // --- Fita LED ---
   if (key === "fita") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tensão</span>
+          <select id="ledTensao">
+            <option>127V</option>
+            <option>220V</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Temperatura</span>
+          <select id="ledTemp">
+            <option value="3000K">Branco Quente — 3000K</option>
+            <option value="4000K">Branco Neutro — 4000K</option>
+            <option value="6500K">Branco Frio — 6500K</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Comprimento</span>
+          <select id="ledComp">
+            <option value="10">Rolo 10m</option>
+            <option value="def">Definir metragem</option>
+          </select>
+        </label>
+
+        <label class="field" id="ledMetrosBox" style="display:none;">
+          <span>Metros</span>
+          <input id="ledMetros" type="number" min="1" placeholder="Ex: 15" />
+        </label>
+
+        <label class="field">
+          <span>Com driver/fonte?</span>
+          <select id="ledFonte">
+            <option value="não">Não</option>
+            <option value="sim">Sim</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Uso (opcional)</span>
+          <select id="ledUso">
+            <option value="">(não informar)</option>
+            <option>Interno</option>
+            <option>Externo</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: IP65 / alto brilho" />
+        </label>
+      </div>
+    `;
+
+    const toggle = () => {
+      const v = $("ledComp")?.value;
+      const box = $("ledMetrosBox");
+      if (!box) return;
+      box.style.display = (v === "def") ? "block" : "none";
+    };
+    $("ledComp").addEventListener("change", toggle);
+    toggle();
+    return;
+  }
+
+  // --- Perfil LED ---
+  if (key === "perfil_led") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tipo</span>
+          <select id="perfilTipo">
+            <option>Embutir</option>
+            <option>Sobrepor</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Cor do perfil</span>
+          <select id="perfilCor">
+            <option>Branco</option>
+            <option>Preto</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Metragem (metros)</span>
+          <input id="perfilMetros" type="number" min="1" placeholder="Ex: 2" />
+        </label>
+
+        <label class="field">
+          <span>Difusor (opcional)</span>
+          <select id="perfilDif">
+            <option value="">(não informar)</option>
+            <option>Leitoso</option>
+            <option>Transparente</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: canto / reto / recorte" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- PAR20 ---
+  if (key === "par20") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Modelo</span>
+          <select id="parModelo">
+            <option>Quadrada recuada</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Temperatura</span>
+          <select id="parTemp">
+            <option value="3000K">3000K (quente)</option>
+            <option value="4000K">4000K (neutro)</option>
+            <option value="6500K">6500K (frio)</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Tensão (opcional)</span>
+          <select id="parTensao">
+            <option value="">(não informar)</option>
+            <option>127V</option>
+            <option>220V</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: dimerizável / alto IRC" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- MR16 ---
+  if (key === "mr16") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tensão</span>
+          <select id="mrTensao">
+            <option>127V</option>
+            <option>220V</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Temperatura</span>
+          <select id="mrTemp">
+            <option value="3000K">3000K (quente)</option>
+            <option value="4000K">4000K (neutro)</option>
+            <option value="6500K">6500K (frio)</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Precisa driver?</span>
+          <select id="mrDriver">
+            <option>Não</option>
+            <option>Sim</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: direcionável / dimerizável" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Arandela ---
+  if (key === "arandela") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Cor</span>
+          <select id="aranCor">
+            <option>Preta</option>
+            <option>Branca</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Instalação</span>
+          <select id="aranInst">
+            <option>Embutir</option>
+            <option>Sobrepor</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Modelo</span>
+          <input id="aranModelo" placeholder="DEFINIR MODELO (obrigatório)" />
+        </label>
+
+        <label class="field">
+          <span>Uso (opcional)</span>
+          <select id="aranUso">
+            <option value="">(não informar)</option>
+            <option>Interno</option>
+            <option>Externo</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: 2 fachos / IP65" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Driver/Fonte ---
+  if (key === "driver_led") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tipo</span>
+          <select id="drvTipo">
+            <option>Driver</option>
+            <option>Fonte</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Saída</span>
+          <select id="drvSaida">
+            <option>12V</option>
+            <option>24V</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Potência (W)</span>
+          <input id="drvW" type="number" min="1" placeholder="Ex: 60" />
+        </label>
+
+        <label class="field">
+          <span>Uso (opcional)</span>
+          <select id="drvUso">
+            <option value="">(não informar)</option>
+            <option>Interno</option>
+            <option>Externo</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: bivolt / slim" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Conector fita ---
+  if (key === "conector_fita_led") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tipo</span>
+          <select id="conTipo">
+            <option>Reto</option>
+            <option>Emenda</option>
+            <option>Em L</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Largura (opcional)</span>
+          <select id="conLarg">
+            <option value="">(não informar)</option>
+            <option>8mm</option>
+            <option>10mm</option>
+            <option>12mm</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: p/ fita 12V / COB" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Difusor ---
+  if (key === "difusor_perfil") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tipo</span>
+          <select id="difTipo">
+            <option>Leitoso</option>
+            <option>Transparente</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Metragem (metros)</span>
+          <input id="difMetros" type="number" min="1" placeholder="Ex: 2" />
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: para perfil embutir" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Trilho ---
+  if (key === "trilho") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Cor</span>
+          <select id="trCor">
+            <option>Preto</option>
+            <option>Branco</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Comprimento (metros)</span>
+          <input id="trMetros" type="number" min="1" placeholder="Ex: 2" />
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: com alimentação / emenda" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Spot p/ trilho ---
+  if (key === "spot_trilho") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Cor (opcional)</span>
+          <select id="spCor">
+            <option value="">(não informar)</option>
+            <option>Preto</option>
+            <option>Branco</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Modelo</span>
+          <input id="spModelo" placeholder="DEFINIR MODELO (obrigatório)" />
+        </label>
+
+        <label class="field">
+          <span>Temperatura (opcional)</span>
+          <select id="spTemp">
+            <option value="">(não informar)</option>
+            <option>3000K</option>
+            <option>4000K</option>
+            <option>6500K</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: 7W / 10W / direcionável" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Sensor presença ---
+  if (key === "sensor_presenca") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Instalação</span>
+          <select id="senInst">
+            <option>Teto</option>
+            <option>Parede</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Uso (opcional)</span>
+          <select id="senUso">
+            <option value="">(não informar)</option>
+            <option>Interno</option>
+            <option>Externo</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: alcance 6m / bivolt" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Fotocélula ---
+  if (key === "fotocelula") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tensão (opcional)</span>
+          <select id="fotoTen">
+            <option value="">(não informar)</option>
+            <option>127V</option>
+            <option>220V</option>
+            <option>Bivolt</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Corrente (opcional)</span>
+          <select id="fotoA">
+            <option value="">(não informar)</option>
+            <option>10A</option>
+            <option>16A</option>
+            <option>20A</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: p/ fachada / p/ refletores" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Bucha ---
+  if (key === "bucha") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Tamanho</span>
+          <select id="buTam">
+            <option>6</option>
+            <option>8</option>
+            <option>10</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Tipo (opcional)</span>
+          <select id="buTipo">
+            <option value="">(não informar)</option>
+            <option>Nylon</option>
+            <option>Universal</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: para luminária/arandela" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Parafuso ---
+  if (key === "parafuso_phillips") {
+    area.innerHTML = `
+      <div class="formGrid">
+        <label class="field">
+          <span>Bitola (opcional)</span>
+          <select id="phBitola">
+            <option value="">(não informar)</option>
+            <option>3,5mm</option>
+            <option>4,0mm</option>
+            <option>4,5mm</option>
+            <option>5,0mm</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Comprimento (mm) (opcional)</span>
+          <select id="phComp">
+            <option value="">(não informar)</option>
+            <option>20mm</option>
+            <option>25mm</option>
+            <option>30mm</option>
+            <option>35mm</option>
+            <option>40mm</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Acabamento (opcional)</span>
+          <select id="phAcab">
+            <option value="">(não informar)</option>
+            <option>Zincado</option>
+            <option>Preto</option>
+            <option>Inox</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Definir (opcional)</span>
+          <input id="phDef" placeholder="Ex: 4.0x30 p/ bucha 8" />
+        </label>
+
+        <label class="field">
+          <span>Obs (opcional)</span>
+          <input id="obs" placeholder="Ex: cabeça chata" />
+        </label>
+      </div>
+    `;
+    return;
+  }
+
+  // --- Fita isolante ---
+  if (key === "fita_isolante") {
     area.innerHTML = `
       <div class="formGrid">
         <label class="field">
@@ -820,7 +1438,6 @@ function syncComboLimit() {
 // ORGANIZAR + SOMAR IGUAIS
 // ==========================
 function organizeAndMergeItems() {
-  // soma iguais por chave tipo|descricao
   const map = new Map();
   for (const it of items) {
     const key = `${it.tipo}|||${it.descricao}`;
@@ -831,7 +1448,6 @@ function organizeAndMergeItems() {
 
   const merged = Array.from(map.values());
 
-  // ordena por tipo e depois por descrição
   merged.sort((a, b) => {
     const t = a.tipo.localeCompare(b.tipo, "pt-BR");
     if (t !== 0) return t;
@@ -870,12 +1486,10 @@ function updateSummaryAndControls() {
 // ==========================
 function addToList() {
   if (!selectedKey) {
-    toast("Selecione um item", "Digite ou use os atalhos.", "danger");
+    toast("Selecione um item", "Escolha uma categoria ou use a busca.", "danger");
     return;
   }
 
-  // ✅ Para FIO, Qtd não importa (fica travado em 1 e oculto),
-  // mas ainda assim garantimos valor seguro.
   let qtd = Number($("qtd")?.value || 0);
   if (selectedKey === "fio") qtd = 1;
 
@@ -891,19 +1505,17 @@ function addToList() {
   }
 
   items.push({
-    id: makeId(),           // ✅ id único
+    id: makeId(),
     tipo: built.tipo,
     descricao: built.text,
     qtd,
   });
 
-  // soma iguais e ordena (deixa sempre limpo)
   organizeAndMergeItems();
 
   renderCards();
   updateSummaryAndControls();
 
-  // limpar seleção após adicionar
   clearSelection();
 
   saveStorage();
@@ -915,7 +1527,6 @@ function clearSelection() {
   $("search").value = "";
   $("qtd").value = 1;
 
-  // ✅ volta Qtd ao normal quando limpar
   setQtyModeForKey(null);
 
   renderForm(null);
@@ -925,6 +1536,7 @@ function clearSelection() {
 function buildDescription(key) {
   const val = (id) => (document.getElementById(id)?.value || "").trim();
 
+  // --- TOMADA ---
   if (key === "tomada") {
     const placa = val("placa");
     const n = Number(val("qtdTomadas") || 0);
@@ -956,9 +1568,10 @@ function buildDescription(key) {
     if (extras.length) parts.push(extras.join(" | "));
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:`Ponto Tomada (${placa})`, text: parts.join(" | ") };
+    return { ok:true, tipo:`Elétrica — Tomada (${placa})`, text: parts.join(" | ") };
   }
 
+  // --- INTERRUPTOR ---
   if (key === "interruptor") {
     const placa = val("placa");
     const teclas = Number(val("teclas") || 0);
@@ -981,9 +1594,10 @@ function buildDescription(key) {
     if (extras.length) parts.push(extras.join(" | "));
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:`Ponto Interruptor (${placa})`, text: parts.join(" | ") };
+    return { ok:true, tipo:`Elétrica — Interruptor (${placa})`, text: parts.join(" | ") };
   }
 
+  // --- MISTO ---
   if (key === "tomada_interruptor") {
     const placa = val("placa");
     const tomadas = Number(val("qtdTomadas") || 0);
@@ -1025,9 +1639,10 @@ function buildDescription(key) {
     if (extras.length) parts.push(extras.join(" | "));
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:`Ponto Misto (${placa})`, text: parts.join(" | ") };
+    return { ok:true, tipo:`Elétrica — Ponto misto (${placa})`, text: parts.join(" | ") };
   }
 
+  // --- FIO ---
   if (key === "fio") {
     const tipo = val("fioTipo");
     const bitola = val("bitola");
@@ -1035,17 +1650,16 @@ function buildDescription(key) {
     const cor = val("fioCor");
     const obs = val("obs");
 
-    if (!metros || metros <= 0) {
-      return { ok:false, error:"Informe a metragem (metros) do cabo/fio." };
-    }
+    if (!metros || metros <= 0) return { ok:false, error:"Informe a metragem (metros) do cabo/fio." };
 
     const parts = [`${tipo} — ${bitola} — ${metros} metros`];
     if (cor) parts.push(`Cor: ${cor}`);
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:"Fio/Cabo", text: parts.join(" | ") };
+    return { ok:true, tipo:"Elétrica — Fio/Cabo", text: parts.join(" | ") };
   }
 
+  // --- DISJUNTOR ---
   if (key === "disjuntor") {
     const tipo = val("djTipo");
     const corrente = val("corrente");
@@ -1055,9 +1669,10 @@ function buildDescription(key) {
     const parts = [`${tipo} — ${corrente} — ${polos}`];
     if (curva) parts.push(curva);
 
-    return { ok:true, tipo:"Proteção/Quadro", text: parts.join(" | ") };
+    return { ok:true, tipo:"Elétrica — Proteção/Quadro", text: parts.join(" | ") };
   }
 
+  // --- CONDUÍTE ---
   if (key === "conduite") {
     const tipo = val("condTipo");
     const diam = val("diam");
@@ -1067,9 +1682,10 @@ function buildDescription(key) {
     const parts = [`${item} — ${tipo} — ${diam}`];
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:"Conduíte/Eletroduto", text: parts.join(" | ") };
+    return { ok:true, tipo:"Elétrica — Conduíte/Eletroduto", text: parts.join(" | ") };
   }
 
+  // --- CAIXA ---
   if (key === "caixa") {
     const t = val("cxTipo");
     const prof = val("prof");
@@ -1081,10 +1697,231 @@ function buildDescription(key) {
     parts.push(`Tampa: ${tampa}`);
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:"Caixas", text: parts.join(" | ") };
+    return { ok:true, tipo:"Elétrica — Caixas", text: parts.join(" | ") };
   }
 
+  // --- FITA LED ---
   if (key === "fita") {
+    const tensao = val("ledTensao");
+    const temp = val("ledTemp");
+    const compSel = val("ledComp");
+    const metrosDef = Number(val("ledMetros") || 0);
+    const fonte = val("ledFonte");
+    const uso = val("ledUso");
+    const obs = val("obs");
+
+    let compTxt = "Rolo 10m";
+    if (compSel === "def") {
+      if (!metrosDef || metrosDef <= 0) return { ok:false, error:"Defina a metragem da fita de LED." };
+      compTxt = `${metrosDef}m`;
+    }
+
+    const parts = [`Fita LED — ${tensao} — ${temp} — ${compTxt}`];
+    parts.push(`Fonte/Driver: ${fonte === "sim" ? "Sim" : "Não"}`);
+    if (uso) parts.push(`Uso: ${uso}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Fita LED", text: parts.join(" | ") };
+  }
+
+  // --- PERFIL LED ---
+  if (key === "perfil_led") {
+    const tipo = val("perfilTipo");
+    const cor = val("perfilCor");
+    const metros = Number(val("perfilMetros") || 0);
+    const dif = val("perfilDif");
+    const obs = val("obs");
+
+    if (!metros || metros <= 0) return { ok:false, error:"Informe a metragem (metros) do perfil de LED." };
+
+    const parts = [`Perfil LED — ${tipo} — ${cor} — ${metros}m`];
+    if (dif) parts.push(`Difusor: ${dif}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Perfis", text: parts.join(" | ") };
+  }
+
+  // --- PAR20 ---
+  if (key === "par20") {
+    const modelo = val("parModelo");
+    const temp = val("parTemp");
+    const tensao = val("parTensao");
+    const obs = val("obs");
+
+    const parts = [`PAR20 — ${modelo} — ${temp}`];
+    if (tensao) parts.push(`Tensão: ${tensao}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Lâmpadas", text: parts.join(" | ") };
+  }
+
+  // --- MR16 ---
+  if (key === "mr16") {
+    const tensao = val("mrTensao");
+    const temp = val("mrTemp");
+    const driver = val("mrDriver");
+    const obs = val("obs");
+
+    const parts = [`MR16 — ${tensao} — ${temp}`, `Driver: ${driver}`];
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Lâmpadas", text: parts.join(" | ") };
+  }
+
+  // --- ARANDELA (modelo obrigatório) ---
+  if (key === "arandela") {
+    const cor = val("aranCor");
+    const inst = val("aranInst");
+    const modelo = val("aranModelo");
+    const uso = val("aranUso");
+    const obs = val("obs");
+
+    if (!modelo) return { ok:false, error:"Em Arandela, preencha o campo DEFINIR MODELO." };
+
+    const parts = [`Arandela — ${cor} — ${inst} — Modelo: ${modelo}`];
+    if (uso) parts.push(`Uso: ${uso}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Arandelas", text: parts.join(" | ") };
+  }
+
+  // --- DRIVER/FONTE ---
+  if (key === "driver_led") {
+    const tipo = val("drvTipo");
+    const saida = val("drvSaida");
+    const w = Number(val("drvW") || 0);
+    const uso = val("drvUso");
+    const obs = val("obs");
+
+    if (!w || w <= 0) return { ok:false, error:"Informe a potência (W) do driver/fonte." };
+
+    const parts = [`${tipo} LED — ${saida} — ${w}W`];
+    if (uso) parts.push(`Uso: ${uso}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Drivers/Fontes", text: parts.join(" | ") };
+  }
+
+  // --- CONECTOR FITA ---
+  if (key === "conector_fita_led") {
+    const tipo = val("conTipo");
+    const larg = val("conLarg");
+    const obs = val("obs");
+
+    const parts = [`Conector p/ fita LED — ${tipo}`];
+    if (larg) parts.push(`Largura: ${larg}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Acessórios", text: parts.join(" | ") };
+  }
+
+  // --- DIFUSOR ---
+  if (key === "difusor_perfil") {
+    const tipo = val("difTipo");
+    const metros = Number(val("difMetros") || 0);
+    const obs = val("obs");
+
+    if (!metros || metros <= 0) return { ok:false, error:"Informe a metragem (metros) do difusor." };
+
+    const parts = [`Difusor — ${tipo} — ${metros}m`];
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Acessórios", text: parts.join(" | ") };
+  }
+
+  // --- TRILHO ---
+  if (key === "trilho") {
+    const cor = val("trCor");
+    const metros = Number(val("trMetros") || 0);
+    const obs = val("obs");
+
+    if (!metros || metros <= 0) return { ok:false, error:"Informe o comprimento (metros) do trilho." };
+
+    const parts = [`Trilho eletrificado — ${cor} — ${metros}m`];
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Trilhos", text: parts.join(" | ") };
+  }
+
+  // --- SPOT TRILHO (modelo obrigatório) ---
+  if (key === "spot_trilho") {
+    const cor = val("spCor");
+    const modelo = val("spModelo");
+    const temp = val("spTemp");
+    const obs = val("obs");
+
+    if (!modelo) return { ok:false, error:"Em Spot p/ trilho, preencha o campo DEFINIR MODELO." };
+
+    const parts = [`Spot p/ trilho — Modelo: ${modelo}`];
+    if (cor) parts.push(`Cor: ${cor}`);
+    if (temp) parts.push(`Temp: ${temp}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Iluminação — Trilhos", text: parts.join(" | ") };
+  }
+
+  // --- SENSOR PRESENÇA ---
+  if (key === "sensor_presenca") {
+    const inst = val("senInst");
+    const uso = val("senUso");
+    const obs = val("obs");
+
+    const parts = [`Sensor de presença — ${inst}`];
+    if (uso) parts.push(`Uso: ${uso}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Automação — Sensores", text: parts.join(" | ") };
+  }
+
+  // --- FOTOCÉLULA ---
+  if (key === "fotocelula") {
+    const ten = val("fotoTen");
+    const a = val("fotoA");
+    const obs = val("obs");
+
+    const parts = ["Fotocélula"];
+    if (ten) parts.push(`Tensão: ${ten}`);
+    if (a) parts.push(`Corrente: ${a}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Automação — Sensores", text: parts.join(" | ") };
+  }
+
+  // --- BUCHA ---
+  if (key === "bucha") {
+    const tam = val("buTam");
+    const tipo = val("buTipo");
+    const obs = val("obs");
+
+    const parts = [`Bucha ${tam}`];
+    if (tipo) parts.push(`Tipo: ${tipo}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Fixação", text: parts.join(" | ") };
+  }
+
+  // --- PARAFUSO ---
+  if (key === "parafuso_phillips") {
+    const bit = val("phBitola");
+    const comp = val("phComp");
+    const acab = val("phAcab");
+    const def = val("phDef");
+    const obs = val("obs");
+
+    const parts = ["Parafuso Phillips"];
+    const specs = [];
+    if (bit) specs.push(bit);
+    if (comp) specs.push(comp);
+    if (acab) specs.push(acab);
+    if (specs.length) parts.push(`(${specs.join(" / ")})`);
+    if (def) parts.push(`Definir: ${def}`);
+    if (obs) parts.push(`Obs: ${obs}`);
+
+    return { ok:true, tipo:"Fixação", text: parts.join(" | ") };
+  }
+
+  // --- FITA ISOLANTE ---
+  if (key === "fita_isolante") {
     const tipo = val("fitaTipo");
     const cor = val("fitaCor");
     const marca = val("marca");
@@ -1094,14 +1931,14 @@ function buildDescription(key) {
     if (marca) parts.push(`Marca: ${marca}`);
     if (obs) parts.push(`Obs: ${obs}`);
 
-    return { ok:true, tipo:"Fixação/Conexões", text: parts.join(" | ") };
+    return { ok:true, tipo:"Fixação", text: parts.join(" | ") };
   }
 
   return { ok:false, error:"Item não reconhecido." };
 }
 
 // ==========================
-// LISTA EM CARDS (AGRUPADA POR TIPO)
+// LISTA EM CARDS
 // ==========================
 function renderCards() {
   const container = $("listCards");
@@ -1116,7 +1953,6 @@ function renderCards() {
     return;
   }
 
-  // agrupa por tipo
   const groups = {};
   for (const it of items) {
     if (!groups[it.tipo]) groups[it.tipo] = [];
@@ -1152,7 +1988,6 @@ function renderCards() {
         </div>
       `;
 
-      // ✅ remove por ID (sempre remove o item certo)
       card.querySelector(".remove").addEventListener("click", () => {
         const i = items.findIndex(x => x.id === it.id);
         if (i >= 0) items.splice(i, 1);
@@ -1168,7 +2003,7 @@ function renderCards() {
 }
 
 // ==========================
-// PDF PREMIUM (letra maior + empresa elegante + resumo)
+// PDF
 // ==========================
 function generatePDF() {
   if (items.length === 0) {
@@ -1201,7 +2036,6 @@ function generatePDF() {
     doc.setTextColor(...CINZA);
     doc.text("RELAÇÃO DE MATERIAIS ELÉTRICOS", 105, 14, { align: "center" });
 
-    // empresa premium
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(...AZUL);
@@ -1228,12 +2062,7 @@ function generatePDF() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(140);
-    doc.text(
-      `Gerado no ELETROLIST — Página ${pageNumber}/${pageCount}`,
-      105,
-      290,
-      { align: "center" }
-    );
+    doc.text(`Gerado no ELETROLIST — Página ${pageNumber}/${pageCount}`, 105, 290, { align: "center" });
   };
 
   const bodyRows = items.map(it => [it.tipo, it.descricao, String(it.qtd)]);
@@ -1253,8 +2082,8 @@ function generatePDF() {
       textColor: 20,
     },
     columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 118 },
+      0: { cellWidth: 55 },
+      1: { cellWidth: 113 },
       2: { cellWidth: 16, halign: "right" },
     },
     headStyles: {
@@ -1263,14 +2092,9 @@ function generatePDF() {
       fontStyle: "bold",
       fontSize: 12,
     },
-    alternateRowStyles: {
-      fillColor: [245, 247, 250],
-    },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
     margin: { left: 14, right: 14 },
-    didDrawPage: () => {
-      drawHeader();
-      drawFooter();
-    },
+    didDrawPage: () => { drawHeader(); drawFooter(); },
   });
 
   const safeEmpresa = empresa.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "_");
